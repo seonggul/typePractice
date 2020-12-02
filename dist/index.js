@@ -1,12 +1,59 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-/* const name = "ksg",
-age =24,
-gender ="male";
- */
-//void는 빈것을 의미하며 저 위치에는 이 함수의 결과값에 대한 type을 지정할 수 있다
-const sayhi = (name, age, gender) => {
-    console.log(`hello ${name}, you are ${age}, you are a ${gender}`);
+const CryptoJS = require("crypto-js");
+class Block {
+    constructor(index, hash, previousHash, data, timestamp) {
+        this.index = index;
+        this.hash = hash;
+        this.previousHash = previousHash;
+        this.data = data;
+        this.timestamp = timestamp;
+    }
+}
+Block.calculateBlockHash = (index, previousHash, timestamp, data) => CryptoJS.SHA256(index + previousHash + timestamp + data).toString();
+Block.validateStructure = (aBlock) => typeof aBlock.index === "number" &&
+    typeof aBlock.hash === "string" &&
+    typeof aBlock.previousHash === "string" &&
+    typeof aBlock.timestamp === "number" &&
+    typeof aBlock.data === "string";
+const genesisBlock = new Block(0, "16453612716", "", "hello", 12456);
+let blockchain = [genesisBlock];
+const getLatestBlock = () => blockchain[blockchain.length - 1];
+const getNewTimeStamp = () => Math.round(new Date().getTime() / 1000);
+const createNewBlock = (data) => {
+    const previousBlock = getLatestBlock();
+    const newIndex = previousBlock.index + 1;
+    const newtTimestamp = getNewTimeStamp();
+    const newHash = Block.calculateBlockHash(newIndex, previousBlock.hash, newtTimestamp, data);
+    const newBlock = new Block(newIndex, newHash, previousBlock.hash, data, newtTimestamp);
+    addBlock(newBlock);
+    return newBlock;
 };
-sayhi("ksg", 24, "male");
+const getHashforBlock = (aBlock) => Block.calculateBlockHash(aBlock.index, aBlock.previousHash, aBlock.timestamp, aBlock.data);
+const isBlockValid = (candidateBlock, previousBlock) => {
+    if (!Block.validateStructure(candidateBlock)) {
+        return false;
+    }
+    else if (previousBlock.index + 1 !== candidateBlock.index) {
+        return false;
+    }
+    else if (previousBlock.hash !== candidateBlock.previousHash) {
+        return false;
+    }
+    else if (getHashforBlock(candidateBlock) !== candidateBlock.hash) {
+        return false;
+    }
+    else {
+        return true;
+    }
+};
+const addBlock = (candidateBlock) => {
+    if (isBlockValid(candidateBlock, getLatestBlock())) {
+        blockchain.push(candidateBlock);
+    }
+};
+createNewBlock("second blcok");
+createNewBlock("third blcok");
+createNewBlock("fourth blcok");
+console.log(blockchain);
 //# sourceMappingURL=index.js.map
